@@ -1,5 +1,7 @@
 from .util import Const
 
+# TODO: Implement specific classes for every ag grid query param options.
+
 c = Const()
 c.sort_type = Const()
 c.filter_type = Const()
