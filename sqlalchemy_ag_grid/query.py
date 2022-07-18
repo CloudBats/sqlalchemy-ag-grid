@@ -6,11 +6,10 @@ from .const import c
 
 
 # TODO: Break this class down into individual functions for ag grid queries.
-# TODO: Find a way to reuse the entities from the orm.Query.
 class AgGridQuery(orm.Query):
     def sort_filter_by_args(self, args: ImmutableMultiDict, mapper: Dict[str, str] = None):
         """
-        querying based on `ImmutableMultiDict` type GET parameters, or `flask.request.args`.
+        querying based on `ImmutableMultiDict` type GET parameters.
 
         :param args: `ImmutableMultiDict` type GET parameters.
         :param mapper: dict associating GET parameter name (=dict's key) and model class field name (=dict's value).
@@ -29,7 +28,7 @@ class AgGridQuery(orm.Query):
 
     def sort_filter_by_json(self, json: dict, mapper: Dict[str, str] = None):
         """
-        querying base on dict type request form, or `flask.request.get_json()`.
+        querying base on dict type request form`.
 
         :param json: dict type key-value (request form as JSON).
         :param mapper: dict associating form field name (=dict's key) and model class field name (=dict's value).
@@ -48,7 +47,7 @@ class AgGridQuery(orm.Query):
 
     def filter_count_by_args(self, args: ImmutableMultiDict, mapper: Dict[str, str] = None):
         """
-        querying based on `ImmutableMultiDict` type GET parameters, or `flask.request.args`,
+        querying based on `ImmutableMultiDict` type GET parameters,
         and return number of records.
 
         :param args: `ImmutableMultiDict` type GET parameters.
@@ -66,7 +65,7 @@ class AgGridQuery(orm.Query):
 
     def filter_count_by_json(self, json: dict, mapper: Dict[str, str] = None):
         """
-        querying base on dict type request form, or `flask.request.get_json()`,
+        querying base on dict type request form,
         and return number of records.
 
         :param json: dict type key-value (request form as JSON).
@@ -185,12 +184,14 @@ class AgGridQuery(orm.Query):
                     except ValueError:
                         continue
 
-                    query = query.order_by(getattr(self._query_entity_zero(), f_col).desc()).limit(f_number).from_self()
+                    ent = self._query_entity_zero().expr
+                    query = query.order_by(getattr(ent, f_col).desc()).limit(f_number).from_self()
 
         return query
 
     def _sort_criterion(self, col: str, s_type: str):
-        column: Column = getattr(self._query_entity_zero(), col)
+        ent = self._query_entity_zero().expr
+        column: Column = getattr(ent, col)
 
         if s_type == c.sort_type.ASC:
             return column.asc()
@@ -201,7 +202,8 @@ class AgGridQuery(orm.Query):
         return None
 
     def _filter_criterion(self, col: str, f_category: str, f_type: str, f_word: str, f_to: str):
-        column: Column = getattr(self._query_entity_zero(), col)
+        ent = self._query_entity_zero().expr
+        column: Column = getattr(ent, col)
 
         if f_category == c.filter_category.TEXT:
 
