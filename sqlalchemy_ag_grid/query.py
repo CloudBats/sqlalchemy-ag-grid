@@ -1,11 +1,12 @@
-from typing import List, Dict
-from itertools import zip_longest, chain
-from sqlalchemy import orm, Column
+from itertools import chain, zip_longest
+from typing import Dict, List
+
+from sqlalchemy import Column, orm
 from werkzeug.datastructures import ImmutableMultiDict
-from .const import c
+
+from .const import FilterCategory, FilterType, Query, SortType
 
 
-# TODO: Break this class down into individual functions for ag grid queries.
 class AgGridQuery(orm.Query):
     def sort_filter_by_args(self, args: ImmutableMultiDict, mapper: Dict[str, str] = None):
         """
@@ -16,14 +17,14 @@ class AgGridQuery(orm.Query):
         :return: self
         """
         return self.sort_filter(
-            sort_col_id=args.getlist(c.query.SORT_COL_ID),
-            sort_type=args.getlist(c.query.SORT_TYPE),
-            filter_col_id=args.getlist(c.query.FILTER_COL_ID),
-            filter_type=args.getlist(c.query.FILTER_TYPE),
-            filter_word=args.getlist(c.query.FILTER_WORD),
-            filter_to=args.getlist(c.query.FILTER_TO),
-            filter_category=args.getlist(c.query.FILTER_CATEGORY),
-            mapper=mapper
+            sort_col_id=args.getlist(Query.SORT_COL_ID),
+            sort_type=args.getlist(Query.SORT_TYPE),
+            filter_col_id=args.getlist(Query.FILTER_COL_ID),
+            filter_type=args.getlist(Query.FILTER_TYPE),
+            filter_word=args.getlist(Query.FILTER_WORD),
+            filter_to=args.getlist(Query.FILTER_TO),
+            filter_category=args.getlist(Query.FILTER_CATEGORY),
+            mapper=mapper,
         )
 
     def sort_filter_by_json(self, json: dict, mapper: Dict[str, str] = None):
@@ -35,14 +36,14 @@ class AgGridQuery(orm.Query):
         :return: self
         """
         return self.sort_filter(
-            sort_col_id=json.get(c.query.SORT_COL_ID, []),
-            sort_type=json.get(c.query.SORT_TYPE, []),
-            filter_col_id=json.get(c.query.FILTER_COL_ID, []),
-            filter_type=json.get(c.query.FILTER_TYPE, []),
-            filter_word=json.get(c.query.FILTER_WORD, []),
-            filter_to=json.get(c.query.FILTER_TO, []),
-            filter_category=json.get(c.query.FILTER_CATEGORY, []),
-            mapper=mapper
+            sort_col_id=json.get(Query.SORT_COL_ID, []),
+            sort_type=json.get(Query.SORT_TYPE, []),
+            filter_col_id=json.get(Query.FILTER_COL_ID, []),
+            filter_type=json.get(Query.FILTER_TYPE, []),
+            filter_word=json.get(Query.FILTER_WORD, []),
+            filter_to=json.get(Query.FILTER_TO, []),
+            filter_category=json.get(Query.FILTER_CATEGORY, []),
+            mapper=mapper,
         )
 
     def filter_count_by_args(self, args: ImmutableMultiDict, mapper: Dict[str, str] = None):
@@ -55,12 +56,12 @@ class AgGridQuery(orm.Query):
         :return: self
         """
         return self.filter_count(
-            filter_col_id=args.getlist(c.query.FILTER_COL_ID),
-            filter_type=args.getlist(c.query.FILTER_TYPE),
-            filter_word=args.getlist(c.query.FILTER_WORD),
-            filter_to=args.getlist(c.query.FILTER_TO),
-            filter_category=args.getlist(c.query.FILTER_CATEGORY),
-            mapper=mapper
+            filter_col_id=args.getlist(Query.FILTER_COL_ID),
+            filter_type=args.getlist(Query.FILTER_TYPE),
+            filter_word=args.getlist(Query.FILTER_WORD),
+            filter_to=args.getlist(Query.FILTER_TO),
+            filter_category=args.getlist(Query.FILTER_CATEGORY),
+            mapper=mapper,
         )
 
     def filter_count_by_json(self, json: dict, mapper: Dict[str, str] = None):
@@ -73,12 +74,12 @@ class AgGridQuery(orm.Query):
         :return: self
         """
         return self.filter_count(
-            filter_col_id=json.get(c.query.FILTER_COL_ID, []),
-            filter_type=json.get(c.query.FILTER_TYPE, []),
-            filter_word=json.get(c.query.FILTER_WORD, []),
-            filter_to=json.get(c.query.FILTER_TO, []),
-            filter_category=json.get(c.query.FILTER_CATEGORY, []),
-            mapper=mapper
+            filter_col_id=json.get(Query.FILTER_COL_ID, []),
+            filter_type=json.get(Query.FILTER_TYPE, []),
+            filter_word=json.get(Query.FILTER_WORD, []),
+            filter_to=json.get(Query.FILTER_TO, []),
+            filter_category=json.get(Query.FILTER_CATEGORY, []),
+            mapper=mapper,
         )
 
     def sort_filter(
@@ -90,7 +91,7 @@ class AgGridQuery(orm.Query):
         filter_word: List[str],
         filter_to: List[str],
         filter_category: List[str],
-        mapper: Dict[str, str]
+        mapper: Dict[str, str],
     ):
         if mapper is None:
             mapper = {}
@@ -102,10 +103,8 @@ class AgGridQuery(orm.Query):
         if len(sort_col_id) > 0:
 
             criterion = [
-                self._sort_criterion(s_col, s_type) for s_col, s_type in zip(
-                    self._map_col_id(sort_col_id, mapper),
-                    sort_type
-                )
+                self._sort_criterion(s_col, s_type)
+                for s_col, s_type in zip(self._map_col_id(sort_col_id, mapper), sort_type)
             ]
 
             # drop None
@@ -122,7 +121,7 @@ class AgGridQuery(orm.Query):
         filter_word: List[str],
         filter_to: List[str],
         filter_category: List[str],
-        mapper: Dict[str, str]
+        mapper: Dict[str, str],
     ):
         if mapper is None:
             mapper = {}
@@ -136,7 +135,7 @@ class AgGridQuery(orm.Query):
         filter_type: List[str],
         filter_word: List[str],
         filter_to: List[str],
-        filter_category: List[str]
+        filter_category: List[str],
     ):
         query = self
 
@@ -144,18 +143,9 @@ class AgGridQuery(orm.Query):
 
             # other than 'top' filter
             criterion = [
-                self._filter_criterion(
-                    f_col,
-                    f_category,
-                    f_type,
-                    f_word,
-                    f_to
-                ) for f_col, f_category, f_type, f_word, f_to in zip_longest(
-                    filter_col_id,
-                    filter_category,
-                    filter_type,
-                    filter_word,
-                    filter_to
+                self._filter_criterion(f_col, f_category, f_type, f_word, f_to)
+                for f_col, f_category, f_type, f_word, f_to in zip_longest(
+                    filter_col_id, filter_category, filter_type, filter_word, filter_to
                 )
             ]
 
@@ -169,13 +159,11 @@ class AgGridQuery(orm.Query):
 
             # filter 'top'
             top_filters = [
-                (f_col, f_word) for f_col, f_category, f_type, f_word, f_to in zip_longest(
-                    filter_col_id,
-                    filter_category,
-                    filter_type,
-                    filter_word,
-                    filter_to
-                ) if f_category == c.filter_category.RANK and f_type == c.filter_type.TOP
+                (f_col, f_word)
+                for f_col, f_category, f_type, f_word, f_to in zip_longest(
+                    filter_col_id, filter_category, filter_type, filter_word, filter_to
+                )
+                if f_category == FilterCategory.RANK and f_type == FilterType.TOP
             ]
             if len(top_filters) > 0:
                 for f_col, f_word in top_filters:
@@ -193,10 +181,10 @@ class AgGridQuery(orm.Query):
         ent = self._query_entity_zero().expr
         column: Column = getattr(ent, col)
 
-        if s_type == c.sort_type.ASC:
+        if s_type == SortType.ASC:
             return column.asc()
 
-        if s_type == c.sort_type.DESC:
+        if s_type == SortType.DESC:
             return column.desc()
 
         return None
@@ -205,53 +193,53 @@ class AgGridQuery(orm.Query):
         ent = self._query_entity_zero().expr
         column: Column = getattr(ent, col)
 
-        if f_category == c.filter_category.TEXT:
+        if f_category == FilterCategory.TEXT:
 
-            if f_type == c.filter_type.EQUALS:
+            if f_type == FilterType.EQUALS:
                 return [column == f_word]
 
-            if f_type == c.filter_type.NOT_EQUAL:
+            if f_type == FilterType.NOT_EQUAL:
                 return [column != f_word]
 
-            if f_type == c.filter_type.STARTS_WITH:
-                return [column.like(f_word + '%')]
+            if f_type == FilterType.STARTS_WITH:
+                return [column.like(f_word + "%")]
 
-            if f_type == c.filter_type.ENDS_WITH:
-                return [column.like('%' + f_word)]
+            if f_type == FilterType.ENDS_WITH:
+                return [column.like("%" + f_word)]
 
-            if f_type == c.filter_type.CONTAINS:
+            if f_type == FilterType.CONTAINS:
                 return [column.contains(f_word)]
 
-            if f_type == c.filter_type.NOT_CONTAINS:
+            if f_type == FilterType.NOT_CONTAINS:
                 return [~column.contains(f_word)]
 
             return None
 
-        if f_category == c.filter_category.NUMBER:
+        if f_category == FilterCategory.NUMBER:
             try:
                 f_number = float(f_word)
             except ValueError:
                 return None
 
-            if f_type == c.filter_type.EQUALS:
+            if f_type == FilterType.EQUALS:
                 return [column == f_number]
 
-            if f_type == c.filter_type.NOT_EQUAL:
+            if f_type == FilterType.NOT_EQUAL:
                 return [column != f_number]
 
-            if f_type == c.filter_type.LESS_THAN:
+            if f_type == FilterType.LESS_THAN:
                 return [column < f_number]
 
-            if f_type == c.filter_type.LESS_THAN_OR_EQUAL:
+            if f_type == FilterType.LESS_THAN_OR_EQUAL:
                 return [column <= f_number]
 
-            if f_type == c.filter_type.GREATER_THAN:
+            if f_type == FilterType.GREATER_THAN:
                 return [column > f_number]
 
-            if f_type == c.filter_type.GREATER_THAN_OR_EQUAL:
+            if f_type == FilterType.GREATER_THAN_OR_EQUAL:
                 return [column >= f_number]
 
-            if f_type == c.filter_type.IN_RANGE and f_to is not None:
+            if f_type == FilterType.IN_RANGE and f_to is not None:
                 try:
                     f_number_to = float(f_to)
                 except ValueError:
@@ -260,19 +248,19 @@ class AgGridQuery(orm.Query):
 
             return None
 
-        if f_category == c.filter_category.RANK:
+        if f_category == FilterCategory.RANK:
             try:
                 f_number = float(f_word)
             except ValueError:
                 return None
 
-            if f_type == c.filter_type.TOP:
+            if f_type == FilterType.TOP:
                 return None  # in case 'top', filter by SQL's LIMIT.
 
-            if f_type == c.filter_type.GREATER_THAN:
+            if f_type == FilterType.GREATER_THAN:
                 return [column > f_number]
 
-            if f_type == c.filter_type.GREATER_THAN_OR_EQUAL:
+            if f_type == FilterType.GREATER_THAN_OR_EQUAL:
                 return [column >= f_number]
 
             return None
@@ -281,7 +269,6 @@ class AgGridQuery(orm.Query):
 
     @staticmethod
     def _map_col_id(requested_col_ids: List[str], mapper: Dict[str, str]) -> List[str]:
-
         def map_if_exist(s: str, d: Dict[str, str]):
             if s in d:
                 return d[s]

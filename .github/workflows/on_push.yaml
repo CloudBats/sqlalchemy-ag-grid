@@ -1,0 +1,54 @@
+---
+name: Lint and Test
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      venv_dir: .venv
+      PIP_DISABLE_PIP_VERSION_CHECK: 1
+      PIP_NO_CACHE_DIR: 0
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: local
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: local
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+    - name: Checkout repo branch
+      uses: actions/checkout@v2
+
+    - name: Install Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.10.5
+
+    - name: Create venv with constraints
+      run: |
+        set -euxo pipefail
+        env | sort
+        python -VV
+        pip -V
+        python -m venv ./${{ env.venv_dir }}
+        ./${{ env.venv_dir }}/bin/pip install wheel==0.37.1 setuptools==58.1.0
+        ./${{ env.venv_dir }}/bin/pip install -r constraints.txt
+
+    # Activate venv in every step, the shell environment is always fresh
+    - name: Run tests
+      run: |
+        set -euxo pipefail
+        . ./${{ env.venv_dir }}/bin/activate && pytest
