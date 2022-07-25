@@ -10,11 +10,7 @@ jobs:
       venv_dir: .venv
       PIP_DISABLE_PIP_VERSION_CHECK: 1
       PIP_NO_CACHE_DIR: 0
-      POSTGRES_HOST: localhost
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: local
+      DB_URL: postgresql://postgres:password@localhost:5432/local
     services:
       postgres:
         image: postgres:12
