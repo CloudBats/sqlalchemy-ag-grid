@@ -1,3 +1,5 @@
+TODO: Update this to reflect the new structure.
+
 # sqlalchemy-ag-grid
 SQLAlchemy Query class suitable for AgGrid request.
 This library is server-side counter part for [ag-grid-axios](https://www.npmjs.com/package/@ytkj/ag-grid-axios).
@@ -17,9 +19,9 @@ This library is server-side counter part for [ag-grid-axios](https://www.npmjs.c
 
     ```python
     from flask_sqlalchemy import SQLAlchemy
-    from sqlalchemy_ag_grid import SortFilterQuery
+    from sqlalchemy_ag_grid import AgGridQuery
 
-    db = SQLAlchemy(query_class=SortFilterQuery)
+    db = SQLAlchemy(query_class=AgGridQuery)
     ```
     
 1. define `Model` class

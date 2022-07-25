@@ -1,1 +1,1 @@
-from .query import SortFilterQuery
+from .query import AgGridQuery
